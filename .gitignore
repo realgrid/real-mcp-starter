@@ -1,0 +1,17 @@
+frontend/
+prompts/
+
+node_modules/
+dist/
+build/
+.env
+.env.*
+*.log
+*.sqlite
+*.sqlite.bak
+
+.vscode
+.editorconfig
+.DS_Store
+
+*.zip
