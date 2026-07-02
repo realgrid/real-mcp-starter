@@ -22,15 +22,25 @@
   flex: 1;
   min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
+  overflow: hidden;
 }
 
-.placeholder {
-  margin: 0;
+.grid-container {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.status-message {
+  margin: auto;
   color: #888;
   font-size: 0.875rem;
+}
+
+.status-message.error {
+  color: #c0392b;
 }
