@@ -10,64 +10,74 @@ mcp:
 
 # RealGrid 개발 지침
 
-RealGrid, 개발 문서는 **real-mcp MCP** (`product: realgrid`)에서 확인.  
-MCP가 없으면 https://docs.realgrid.com (RealGrid2, `realgrid` npm)만 참고하고 **realgridjs(V1) 자료는 사용하지 않는다.**
+공식 문서는 **real-mcp MCP** (`product: realgrid`). MCP가 없으면 https://docs.realgrid.com (RealGrid2, `realgrid`, `realgrid-react` npm)만 사용하고 **realgridjs(V1)은 쓰지 않는다.**
 
-이 Skill은 공식 문서·MCP **보충**과 **실수 방지**만 다룬다. 설치·기본 연동·컬럼 정의는 MCP React 튜토리얼을 따르고, 여기서 중복 서술하지 않는다.  
-MCP 문서 조회·최종 응답 형식은 루트 [`AGENTS.md`](../../../AGENTS.md)를 따른다.
+이 Skill은 공식 문서 **보충**과 **자주 틀리는 부분**만 정리한다. API·옵션은 MCP **키워드 검색**으로 확인하고, 스니펫만으로 구현 가능하면 추가 탐색·node_modules 분석은 하지 않는다.
 
-## RealGridReact — 문서 보충
+## RealGridReact
 
-React 연동은 MCP `tutorial-react-*` 튜토리얼(`realgrid-react`)을 기준으로 한다.
+- MCP JS/바닐라 예제는 API·옵션 이름 참고만 하고, 생명주기 코드는 그대로 복사하지 않는다.
+- unmount 시 wrapper가 `grid.destroy()` → `provider.destroy()`를 호출한다. **추가 cleanup 불필요.** `onDestroy`에서 destroy를 다시 호출하면 이중 destroy 오류.
+- `GridView` 인스턴스를 React **`useState`에 넣지 않는다.** `useRef<RealGridReact>`로 접근 (`gridRef.current.gridView`).
+- 그리드 부모 컨테이너에 **명시적 높이**가 있어야 한다 (`flex: 1; min-height: 0` 등). 높이 0이면 그리드가 보이지 않는다.
+- fields/columns를 비동기로 받는 화면은, 스키마가 비어 있는 첫 렌더에서 mount하지 않는다. `fieldNames.length > 0` 이후 렌더하거나 `autoGenerateField`를 쓴다.
 
-- **destroy**: `RealGridReact` unmount 시 내부에서 `grid.destroy()` → `provider.destroy()` 처리. **추가 cleanup 불필요.**
-- **`onDestroy` prop**: destroy **직전** 훅(`beforeDestroy`). **`grid.destroy()` / `provider.destroy()` 호출 금지** — wrapper와 이중 destroy → `dispose` null 오류.
-- **실행 환경**: React(`tsx`, `RealGridReact`)와 MCP **JS/바닐라 예제**는 연동 전제가 다르다. 연동·데이터 바인딩은 **`tutorial-react-*`** 기준. JS 예제는 API·옵션 참고만 (아래 「하지 말 것」).
-- **레이아웃**: 그리드 컨테이너 부모에 **명시적 높이** (`flex: 1; min-height: 0` 등). 높이 0이면 그리드가 보이지 않음.
-- **인스턴스 보관**: `GridView`를 React **`useState`에 넣지 않음**. `RealGridReact`용 `useRef`는 OK.
-- **비동기 스키마 주의**: `rows`를 먼저 비동기로 받고 `fields/columns`를 동적으로 만드는 화면에서는, 스키마가 비어있는 첫 렌더에서 그리드를 먼저 mount하지 않도록 한다. `fieldNames.length > 0` 이후 렌더, `autoGenerateField` 사용, 또는 `onInitialized`에서 명령형(`setFields`/`setColumns`/`setRows`) 설정으로 초기화 타이밍을 고정한다.
+## React — 초기화·타이밍
 
-## 편집 그리드 최소 옵션
+`realgrid-react`는 **mount 시점**에 prop과 `RGDataColumn` 자식을 그리드에 반영한다.  
+같은 기능을 `onInitialized`, prop, `useEffect`에 **나눠 두면** 콜백이 안 붙거나, 두 번 등록되거나, `gridViewRef`가 null인 채 effect가 도는 경우가 있다.
 
-공식 권장 설정은 MCP `/realgrid/guides/tutorial-recommended-grid-settings`. 최소: `sortMode`/`filterMode: "explicit"`, `gridView.editOptions.commitByCell = true`, `commitWhenLeave: true`.
+**역할을 나눈다.**
 
-## Fields / Columns
+- **행 동적 스타일** — `RealGridReact`의 **`rowStyleCallback` prop** 한 곳. 컴포넌트 밖 상수나 `useCallback`으로 정의. wrapper가 mount 시 `setRowStyleCallback`을 호출한다.
+- **컬럼 동적 스타일** — `COLUMNS` 정의 또는 `RGDataColumn`의 **`styleCallback`**. `onInitialized`에서 `columnByName(...).styleCallback = …` 하지 않는다. `RGDataColumn`은 mount가 늦어서 그 시점엔 컬럼이 없을 수 있다.
+- **필터·groupBy 등 rows에 의존하는 설정** — `useEffect`에서 `gridRef.current?.gridView`로 접근, **`[rows]`(또는 rows 의존 state) 변경 후** 실행. 스타일 콜백과 섞지 않는다.
+- **`onInitialized`** — `onCellEdited` 같은 **이벤트 핸들러 연결**용. 여기서 ref를 잡아 `useEffect`로 스타일·필터를 다시 거는 패턴은 피한다.
 
-- 편집 이벤트 필드 식별: `provider.getOrgFieldName(field)` — `field`는 필드 **인덱스**(이름 아님).
-- `column.fieldName`이 표시용일 때, 원본 값은 `grid.getValue` / `provider.getValue`로 **다른 field명** 사용.
+```tsx
+// OK: 스타일은 prop, rows 의존 작업은 effect
+<RealGridReact ref={gridRef} rows={rows} rowStyleCallback={globalRowStyle} />
+useEffect(() => {
+  const grid = gridRef.current?.gridView;
+  if (!grid || rows.length === 0) return;
+  applyLocaleFilters(grid, rows);
+}, [rows]);
+
+// NG: 같은 스타일을 onInitialized + prop + effect에 중복
+onInitialized={(g) => { gridViewRef.current = g; g.setRowStyleCallback(...); }}
+<RealGridReact rowStyleCallback={...} onInitialized={...} />
+```
 
 ## 스타일
 
-- 동적 스타일: `styleCallback`(컬럼) / `setRowStyleCallback`(행) → **`{ styleName: 'css-class' }` 반환**.
-- CSS 셀 클래스 (styleName과 조합):
-  - 일반 데이터 셀: `.rg-data-cell.클래스명`
-  - 그룹 푸터 셀: `.rg-rowgroup-footer-cell.클래스명`
-  - 하단 footer 셀: `.rg-footer-cell.클래스명`
-- **styleCallback 계열:** `setValue()` 등 **값 변경·무거운 작업 금지** (렌더 중 → 무한 루프·성능 저하). 읽기만.
+React에서 콜백을 **어디에** 둘지 → 위 「React — 초기화·타이밍」. `styleName`/`style` API는 MCP 키워드(`rowStyleCallback`, `styleCallback`, `styleName`)로 확인.
 
-## 편집 → DB 저장
+**자주 틀리는 것**
 
-- **일반(권장)**: `dataProvider.onRowStateChanged` — 행 상태(`CREATED`/`UPDATED`/…) 기준 DB 처리. 일괄 저장은 `grid.commit()` 후 `getAllStateRows`·`getJsonRow`.
-- **셀 편집 즉시 DB 반영**: `gridView.onCellEdited` — `grid.getValue(itemIndex, fieldName)` (`getOrgFieldName(field)`로 필드 확인).
-- **`oldValue`/`newValue` 필요**: `gridView.onEditRowChanged`.
-- aggregate/footer 사용 시 `onEditRowChanged` 누락 가능 → `provider.onValueChanged` 백업.
+- **`rowStyleCallback`의 `styleName`** — RealGrid가 행의 각 셀에 클래스를 붙인다. CSS는 **`.global-content-row { … }`**처럼 사용자 클래스만 정의하면 된다. **`.rg-data-cell` 아래·앞에 행 스타일을 매달지 않는다** (예: `.rg-data-cell.global-content-row` — 셀 테마 선택자와 행 `styleName`을 섞은 오해).
+- **`.rg-data-cell`** — 데이터 셀 영역의 **유효한** RealGrid 테마 클래스. `realgrid-style.css` 커스터마이즈·specificity 조정에 쓸 수 있다. 행/컬럼 `styleName`과는 별개.
+- 푸터·그룹푸터 등 다른 영역은 각각 `rg-footer-cell`, `rg-rowgroup-footer-cell` 등 해당 영역 클래스를 쓴다.
+- 콜백 안 `setValue()`·fetch 등 값 변경·무거운 작업 금지.
 
-편집 이벤트 순서: `onEditCommit` → `onEditRowChanged` → `onCellEdited`. `onEditCommit`은 반영 여부·검증용(`false`면 취소). **`onEditCommit`에서 fetch 금지.**
+## 편집·저장
+
+- **일반(권장):** `dataProvider.onRowStateChanged` — 행 상태(`CREATED`/`UPDATED`/…) 기준으로 DB 처리. 일괄 저장은 `grid.commit()` 후 `getAllStateRows`·`getJsonRow`.
+- **셀 편집 즉시 DB 반영:** `gridView.onCellEdited` — `grid.getValue(itemIndex, fieldName)`.
+- **oldValue/newValue 필요:** `gridView.onEditRowChanged`. aggregate/footer 사용 시 이벤트가 빠질 수 있어 `provider.onValueChanged`를 백업으로 둔다.
+- 이벤트 순서: `onEditCommit` → `onEditRowChanged` → `onCellEdited`. `onEditCommit`은 검증·취소(`false`)용 — **여기서 fetch 하지 않는다.**
+- 편집 이벤트의 `field`는 이름이 아니라 **필드 인덱스**. 원본 필드명은 `provider.getOrgFieldName(field)`.
+- 편집 그리드 최소: `sortMode`/`filterMode: "explicit"`, `commitByCell`·`commitWhenLeave: true` (옵션은 MCP 키워드 `commitByCell`, `filterMode` 등).
 
 ## Row Group + 집계
 
-- `summaryMode: 'aggregate'`와 footer `visible: true` — footer/groupFooter `expression` 동작 조건.
-- 행 그룹핑: `setRows` **이후** `groupBy`. (`setRows` 전에 `groupBy` 했다면 로드 후 재호출)
-- `setRows`로 데이터 재로드 시 그룹 풀리면 `groupBy` 재호출.
-- 그룹 푸터·집계·푸터 갱신: 셀/데이터 변경 후 `grid.refresh()`.
+- `summaryMode: 'aggregate'`와 footer `visible: true` — footer/groupFooter `expression`이 동작하는 전제.
+- `setRows` **이후** `groupBy`를 호출한다. `setRows`로 재로드하면 그룹이 풀릴 수 있으므로 `groupBy`를 다시 호출하고, 셀 변경 후 `grid.refresh()`로 푸터를 갱신한다.
 
 ## 하지 말 것
 
-| 금지                                                | 이유                                                                                                                                                   |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **JS/바닐라 MCP 예제를 React(`tsx`)에 그대로 적용** | **실행 환경 미고려** — JS는 단일 페이지·명령형 생명주기, React는 컴포넌트 mount/unmount·`StrictMode`·state. 연동은 `tutorial-react-*`, JS는 API·옵션만 |
-| realgridjs(V1) API·예제 복사                        | GridView/LocalDataProvider와 비호환                                                                                                                    |
-| GridView를 React state에 보관                       | 불필요 리렌더·인스턴스 꼬임                                                                                                                            |
-| `RealGridReact` `onDestroy`에서 destroy 호출        | wrapper가 이미 destroy → 이중 destroy                                                                                                                  |
-| `styleCallback` 안에서 `setValue()`                 | 렌더 루프·성능 문제                                                                                                                                    |
-| 웹 검색 결과를 MCP 미확인으로 적용                  | V1 혼용·구버전 옵션명                                                                                                                                  |
+- JS/바닐라 MCP 예제를 React(`tsx`)에 그대로 적용 (mount/unmount·StrictMode 미고려)
+- realgridjs(V1) API·예제, GridView를 React state에 보관, `onDestroy`에서 destroy 재호출
+- `styleCallback` / `rowStyleCallback` 안에서 `setValue()` 등 값 변경 (위 「스타일」)
+- **`onInitialized` + `rowStyleCallback` prop + `useEffect`로 스타일·필터 혼합** (위 「React — 초기화·타이밍」)
+- **`onInitialized`에서 `columnByName(...).styleCallback` 설정**
+- MCP 미확인 웹 검색 (V1·구버전 옵션 혼입)
