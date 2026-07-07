@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { Link, Route, Routes } from "react-router-dom";
 import * as RealGrid from "realgrid";
 import { RGDataColumn, RGDataField, RealGridReact } from "realgrid-react";
 import "realgrid/dist/realgrid-style.css";
+import NetflixTvShow from "./pages/NetflixTvShow";
 import "./App.css";
 
 type EngagementRow = {
@@ -98,7 +100,7 @@ const GRID_PROPS: RealGrid.ViewOptions = {
   header: { height: 40 },
 };
 
-function App() {
+function EngagementPage() {
   const gridRef = useRef<RealGridReact>(null);
   const [rows, setRows] = useState<EngagementRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ function App() {
   }, []);
 
   return (
-    <div className="app">
+    <>
       <header className="app-header">
         <h1>Netflix Admin</h1>
         <p>주간(WEEKLY) TOP 10 영화 — Engagement</p>
@@ -157,6 +159,21 @@ function App() {
           </div>
         )}
       </main>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <div className="app">
+      <nav className="app-nav">
+        <Link to="/">Engagement</Link>
+        <Link to="/netflix-tvshows">TV 쇼 시즌</Link>
+      </nav>
+      <Routes>
+        <Route path="/" element={<EngagementPage />} />
+        <Route path="/netflix-tvshows" element={<NetflixTvShow />} />
+      </Routes>
     </div>
   );
 }

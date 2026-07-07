@@ -7,6 +7,22 @@
   gap: 12px;
 }
 
+.app-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.app-nav a {
+  color: #e50914;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.app-nav a:hover {
+  text-decoration: underline;
+}
+
 .app-header h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -25,7 +41,6 @@
   flex-direction: column;
   background: #fff;
   border: 1px solid #ddd;
-  border-radius: 8px;
   overflow: hidden;
 }
 
