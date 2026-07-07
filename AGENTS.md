@@ -3,8 +3,6 @@ name: netflix-admin
 description: >-
   RealGrid + RealChart 프로젝트 — 모든 에이전트 작업 전에 이 문서를 읽는다.
   API는 real-mcp MCP로 확인. 제품별 실무 지침은 .agents/skills/ 참고.
-mcp:
-  server: real-mcp
 ---
 
 # Agent Instructions
@@ -46,10 +44,3 @@ MCP로 문서를 조회해 답변·구현한 경우, **최종 응답 말미**에
 - **근거 요약**: 해당 문서에서 따온 핵심 옵션·API·설정값 1~2문장 (가능하면 원문 표현 유지)
 - **여러 문서**: 문서별 링크 + 한 줄 근거 목록
 - MCP 미사용·고정 지침만 적용한 경우 생략
-
-## 다른 RealGrid 프로젝트에 복사
-
-| 범위        | 복사 대상                                               |
-| ----------- | ------------------------------------------------------- |
-| 저장소      | `AGENTS.md`, `.agents/skills/`                          |
-| 사용자 전역 | `~/.cursor/` 등 에이전트 설정에서 `AGENTS.md` 경로 지정 |

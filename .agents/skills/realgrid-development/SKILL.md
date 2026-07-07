@@ -3,9 +3,6 @@ name: realgrid-development
 description: >-
   RealGrid 개발 지침 — realgrid-react 연동, 편집·저장 이벤트, row grouping,
   styleCallback, 집계. MCP 문서 보충·실수 방지. API는 real-mcp MCP (product: realgrid).
-mcp:
-  server: real-mcp
-  product: realgrid
 ---
 
 # RealGrid 개발 지침

@@ -3,9 +3,6 @@ name: realchart-development
 description: >-
   RealChart 개발 지침 — 차트 config, realchart-react 연동, 라이선스·import,
   API는 real-mcp MCP (product: realchart).
-mcp:
-  server: real-mcp
-  product: realchart
 ---
 
 # RealChart 개발 지침
