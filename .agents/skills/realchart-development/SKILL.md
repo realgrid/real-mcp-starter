@@ -91,13 +91,14 @@ import { RealChartReact } from "realchart-react";
 
 ## 하지 말 것
 
-| 금지                                              | 이유                                                        |
-| ------------------------------------------------- | ----------------------------------------------------------- |
-| `inverted: true`일 때 categories를 `yAxis`로 이동 | Bar는 config상 항상 `xAxis`=카테고리. 시각만 invert됨       |
-| `<RealChartReact animate />`                      | v0.0.x 래퍼 버그로 DOM에 boolean `animate` 전달·React 경고  |
-| 외부 `ResizeObserver` + `canMount`로 마운트 지연  | RealChart 내장 resize와 중복·`setState` 루프로 UI 멈춤 가능 |
-| `useEffect(..., [config])`로 create/destroy 반복  | 무한 루프·무한 로딩처럼 보이는 UI 멈춤                      |
-| 컨테이너 높이 미지정 상태에서 `h="100%"`만 사용   | CSS `min-height` 없으면 높이 0 → 빈 패널                    |
-| `import RealChart from 'realchart'`               | npm ESM default export 없음 — 빌드 실패                     |
-| `realchart/dist/realchart-style.css`              | 패키지 경로 불일치 — `realchart/realchart-style.css` 사용   |
-| Pie `pointLabel.text: '${y}%'`에 절대값 y 사용    | y가 합계·비율이 아니면 포맷 오류. `textCallback`으로 % 계산 |
+| 금지                                              | 이유                                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `inverted: true`일 때 categories를 `yAxis`로 이동 | Bar는 config상 항상 `xAxis`=카테고리. 시각만 invert됨                              |
+| `<RealChartReact animate />`                      | v0.0.x 래퍼 버그로 DOM에 boolean `animate` 전달·React 경고                         |
+| 외부 `ResizeObserver` + `canMount`로 마운트 지연  | RealChart 내장 resize와 중복·`setState` 루프로 UI 멈춤 가능                        |
+| `useEffect(..., [config])`로 create/destroy 반복  | 무한 루프·무한 로딩처럼 보이는 UI 멈춤                                             |
+| 컨테이너 높이 미지정 상태에서 `h="100%"`만 사용   | CSS `min-height` 없으면 높이 0 → 빈 패널                                           |
+| `import RealChart from 'realchart'`               | npm ESM default export 없음 — 빌드 실패                                            |
+| `realchart/dist/realchart-style.css`              | 패키지 경로 불일치 — `realchart/realchart-style.css` 사용                          |
+| Pie `pointLabel.text: '${y}%'`에 절대값 y 사용    | y가 합계·비율이 아니면 포맷 오류. `textCallback`으로 % 계산                        |
+| Highcharts·ECharts 등 **타 차트** 툴팁 문법       | RealChart 변수·포맷과 다름. `${category}`, `${y:#,##0}`, `${pct:.1f}` 등 사용 금지 |
