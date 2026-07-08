@@ -24,8 +24,6 @@ description: >-
 `realgrid-react`는 **mount 시점**에 prop과 `RGDataColumn` 자식을 그리드에 반영한다.  
 같은 기능을 `onInitialized`, prop, `useEffect`에 **나눠 두면** 콜백이 안 붙거나, 두 번 등록되거나, `gridViewRef`가 null인 채 effect가 도는 경우가 있다.
 
-**역할을 나눈다.**
-
 - **행 동적 스타일** — `RealGridReact`의 **`rowStyleCallback` prop** 한 곳. 컴포넌트 밖 상수나 `useCallback`으로 정의. wrapper가 mount 시 `setRowStyleCallback`을 호출한다.
 - **컬럼 동적 스타일** — `COLUMNS` 정의 또는 `RGDataColumn`의 **`styleCallback`**. `onInitialized`에서 `columnByName(...).styleCallback = …` 하지 않는다. `RGDataColumn`은 mount가 늦어서 그 시점엔 컬럼이 없을 수 있다.
 - **필터·groupBy 등 rows에 의존하는 설정** — `useEffect`에서 `gridRef.current?.gridView`로 접근, **`[rows]`(또는 rows 의존 state) 변경 후** 실행. 스타일 콜백과 섞지 않는다.
